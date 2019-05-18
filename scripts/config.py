@@ -24,12 +24,18 @@ Set program parameters
 def GetTweetsFolder():
     return '../data/tweets'
 
+def GetMLFolder():
+    return '../data/tweets/ML'
+
+def GetNWFolder():
+    return '../data/tweets/NW'
+
 # Set user storage folder
 def GetUsersFolder():
     return '../data/users'
 
 # Set model storage folder
-def GetUsersFolder():
+def GetModelsFolder():
     return '../data/models'
 
 # Set key location. Add to gitignore
@@ -52,18 +58,18 @@ Helper functions
 -------------------------------------------------------------------------------------------
 '''
 # Get filename for a set of tweets
-def GetTweetFileName(month,day,set_n,call=0):
+def GetTweetFileName(month,day,set_n,call=0,collection_type='ML'):
     filename = ''
     if call >= 0 or call <= 10:
-        filename = GetTweetsFolder()+'/M'+str(month)+'/D'+str(day)+'/tweets'+'_S'+str(set_n)+'_C'+str(call)+'.json'        
+        filename = GetTweetsFolder()+'/'+collection_type+'/M'+str(month)+'/D'+str(day)+'/tweets'+'_S'+str(set_n)+'_C'+str(call)+'.json'        
     return filename
 
 def GetUserFileName(user_id):
     return GetUsersFolder()+'/user_'+str(user_id)+'.json'
 
 # Get a filename for given 3 digit combo. Uses stub for all. Add as default stubto allow arg.
-def GetSetsFileName(month,day):   
-    return GetTweetsFolder()+'/M'+str(month)+'/D'+str(day)+'/sets.json'
+def GetSetsFileName(month,day,collection_type):   
+    return GetTweetsFolder()+'/'+collection_type+'/M'+str(month)+'/D'+str(day)+'/sets.json'
 
 # Return a list tweet ids for all tweets in a flat json file
 def GetTweetIds(filename):

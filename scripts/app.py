@@ -122,10 +122,10 @@ def main():
                         collector = int(input("Enter 0 to exit, 1 to run machine learning collector, 2 to run network collector: "))
                     if collector == 1:
                         print("Starting ML Connection")
-                        # schedule.RunMLCollector(params['month'],params['day'])
+                        schedule.RunMLCollector(params['month'],params['day'])
                     elif collector == 2:
                         print("Starting Network Connection")
-                        # schedule.RunNWCollector(params['month'],params['day'])
+                        schedule.RunNWCollector(params['month'],params['day'])
             except Exception as e:
                 print(e, file=sys.stderr)
                 print('Could not find a file with that date.')

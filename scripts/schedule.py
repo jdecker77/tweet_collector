@@ -26,7 +26,7 @@ All runs require unique run times.
 -------------------------------------------------------------------------------------------
 '''
 # Create set obj for each day in collection interval.
-def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedule):
+def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedule,collection_type):
 
     for interval in range(1,collection_interval+1):
 
@@ -58,6 +58,7 @@ def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedul
             set_x = {
                 'interval_name':interval_identifier,
                 'total_intervals':collection_interval,
+                'collection_type':collection_type,
                 'interval':interval,
                 'year':year,
                 'month':month,
@@ -74,7 +75,7 @@ def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedul
         # Add month and day folders if needed
         APP_ROOT = os.path.dirname(os.path.abspath(__file__))
         tweets_folder = config.GetTweetsFolder().replace('../','')
-        MONTH_ROOT = APP_ROOT.replace('scripts',tweets_folder+'/M'+str(month))
+        MONTH_ROOT = APP_ROOT.replace('scripts',tweets_folder+'/'+collection_type+'/M'+str(month))
         if not os.path.isdir(MONTH_ROOT):
             os.mkdir(MONTH_ROOT)
 
@@ -82,7 +83,7 @@ def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedul
         if not os.path.isdir(DAY_ROOT):
             os.mkdir(DAY_ROOT)
 
-        config.WriteJSON(sets,config.GetSetsFileName(month,day))
+        config.WriteJSON(sets,config.GetSetsFileName(month,day,collection_type))
         
         # increment day. if day is in next month, increment month, set day to 1
         # Add year by EOY!
@@ -100,14 +101,15 @@ def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedul
                     month = 1
 
 
-def PreviewSchedule(month,day):
+def PreviewSchedule(month,day,collection_type):
     
-    sets = config.ReadJSON(config.GetSetsFileName(month,day))
+    sets = config.ReadJSON(config.GetSetsFileName(month,day,collection_type))
     
     print("\n")
     print("Preview Schedule")
     print("____________________________________________")
     print("Interval Name:",sets[0]['interval_name'])
+    print("Interval Type:",sets[0]['interval_type'])
     print("Total Intervals:",sets[0]['total_intervals'])
     print("Interval Number:",sets[0]['interval'])
 
@@ -142,7 +144,7 @@ All runs require unique run times.
 '''
 # Collects initial tweet from stream and updates from rest
 def RunMLCollector(month,day):
-    filename = config.GetSetsFileName(month,day)
+    filename = config.GetSetsFileName(month,day,collection_type)
     sets = config.ReadJSON(filename)
     
     times = []
@@ -174,11 +176,13 @@ def RunMLCollector(month,day):
                     print('skipping old runtime.')
 
 # Collect tweets from geo area. Local users are added to users folder and their friends/followers are pulled. Skipping existing users for now.
-def RunNWCollector(month,day): 
-    localPlaces = ['Erie, PA','Wesleyville, PA','Harborcreek, PA','Lawrence Park, PA']
+def RunNWCollector(month,day):
+    import config
 
-    filename = config.GetSetsFileName(month,day)   
-    sets = config.ReadJSON(filename)
+    filename = config.GetSetsFileName(month,day,collection_type)  
+    sets = config.ReadJSON(filename) 
+    
+    localPlaces = ['Erie, PA','Wesleyville, PA','Harborcreek, PA','Lawrence Park, PA']
     
     times = []
     for set_n in sets:
@@ -206,7 +210,7 @@ def RunNWCollector(month,day):
                     config.WriteJSON(sets,filename)
 
                     # Check each user, if in Erie write to users and get friends/followers
-                    tweets = config.ReadJSON(GetTweetFileName(set_n['month'],set_n['day'],set_n['set'],set_n['call']))
+                    tweets = config.ReadJSON(config.GetTweetFileName(set_n['month'],set_n['day'],set_n['set'],set_n['call']))
                     newUsers = []
                     for tweet in tweets:
                         influence_score = 0
@@ -217,7 +221,7 @@ def RunNWCollector(month,day):
 
                     # Write each user to file, get friends, followers
                     for user in newUsers:
-                        filename = GetUserFileName(user['id_str'])
+                        filename = config.GetUserFileName(user['id_str'])
                         config = Path(filename)
                         if config.is_file():
                             # Update this - need the most current version but not if user is in this set
