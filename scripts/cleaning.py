@@ -21,19 +21,6 @@ C
 -------------------------------------------------------------------------------------------
 '''
 
-def ExtractUsers():
-    # Get list of user files
-    APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-    user_folder = config.GetUsersFolder().replace('../','')
-    tmp = APP_ROOT.replace('scripts',user_folder+'/')
-    users = os.listdir(os.path.dirname(tmp))
-    # print(users)
-
-    df = pd.DataFrame(users,index=np.arange(0,len(users)),columns=['user'])
-    df = FlattenUser(df)
-
-    return df
-
 '''
 Get statuses as dataframe
 '''
