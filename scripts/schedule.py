@@ -25,8 +25,15 @@ Scheduling
 All runs require unique run times.
 -------------------------------------------------------------------------------------------
 '''
+
+def GetPlaces(coords):
+    return collection.GetPlacesByGeo(coords)
+
+def GetBoundaries(coords,buffer_value):
+    return collection.GetLocationBoundries(coords,buffer_value)
+
 # Create set obj for each day in collection interval.
-def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedule,collection_type):
+def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedule,collection_type,boundaries):
 
     for interval in range(1,collection_interval+1):
 
@@ -67,7 +74,8 @@ def MakeSets(year,month,day,collection_interval,interval_identifier,user_schedul
                 'set':i,
                 'call':1,
                 'runtimes':runs,
-                'call_times':[]
+                'call_times':[],
+                'boundaries':boundaries
                 }
             sets.append(set_x)
             j+=num_calls
@@ -176,13 +184,13 @@ def RunMLCollector(month,day):
                     print('skipping old runtime.')
 
 # Collect tweets from geo area. Local users are added to users folder and their friends/followers are pulled. Skipping existing users for now.
-def RunNWCollector(month,day):
+def RunNWCollector(month,day,localPlaces):
     import config
 
     filename = config.GetSetsFileName(month,day,collection_type)  
     sets = config.ReadJSON(filename) 
     
-    localPlaces = ['Erie, PA','Wesleyville, PA','Harborcreek, PA','Lawrence Park, PA']
+    # localPlaces = ['Erie, PA','Wesleyville, PA','Harborcreek, PA','Lawrence Park, PA']
     
     times = []
     for set_n in sets:

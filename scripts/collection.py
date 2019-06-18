@@ -8,6 +8,8 @@ import time as sleeper
 
 # 3rd Party
 import twitter
+import pandas as pd
+import geopandas as gpd
 
 # Local 
 import config
@@ -17,8 +19,9 @@ import config
 Configure API 
 -------------------------------------------------------------------------------------------
 '''
-def GetTwitterRest(pathToKey):
+def GetTwitterRest():
     try:
+        pathToKey = config.GetPathToKey()
         with open(pathToKey,'r') as infile:
             keys = infile.read().split('\n')
             CONSUMER_KEY = keys[0]
@@ -36,8 +39,9 @@ def GetTwitterRest(pathToKey):
     return twitter_api
 
 
-def GetTwitterStream(pathToKey):
+def GetTwitterStream():
     try:
+        pathToKey = config.GetPathToKey()
         with open(pathToKey,'r') as infile:
             keys = infile.read().split('\n')
             CONSUMER_KEY = keys[0]
@@ -60,9 +64,33 @@ API Calls
 -------------------------------------------------------------------------------------------
 '''
 
+# 
+def GetPlacesByGeo(coords):
+    twit_api = GetTwitterRest()
+
+    return twit_api.geo.search(lat=coords[0],long=coords[1],granularity = 'neighborhood')
+
+def GetLocationBoundries(coords,buffer_value):
+    
+    df = pd.DataFrame(coords,columns=['Latitude','Longitude'])
+    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Longitude, df.Latitude))
+    envelope = gdf.geometry.buffer(buffer_value).envelope
+    
+    area = envelope[0]
+    
+    minx = area.bounds[0]
+    miny = area.bounds[1]
+    maxx = area.bounds[2]
+    maxy = area.bounds[3]
+
+    geometry = [minx,miny,maxx,maxy]
+    
+    return geometry
+
+
 # Query tweets by term and location. Writes to file with query name.
 def ReadTweets(list_ofQueries,search_location):
-    twit_api = GetTwitterRest(pathToKey)
+    twit_api = GetTwitterRest()
     
     for x in range(0,len(list_ofQueries)):
         query = list_ofQueries[x]
@@ -76,7 +104,7 @@ def ReadTweets(list_ofQueries,search_location):
 # Get user object by user_id and write to file.
 def GetUser(user_id):
     print('Getting users')
-    twit_api = GetTwitterRest(pathToKey)
+    twit_api = GetTwitterRest()
     user = twit_api.users.show(user_id=user_id)
     
     filename = config.GetUserFileName(userid)
@@ -87,7 +115,7 @@ Get friends of user by user_id and write to file.
 '''
 def GetFriends(userid):
     print('Getting friends of ',userid)
-    twit_api = GetTwitterRest(config.GetPathToKey())
+    twit_api = GetTwitterRest()
 
     filename = config.GetUserFileName(userid)
     user = config.ReadJSON(filename)
@@ -122,7 +150,7 @@ Get followers of user by user_id and write to file.
 
 def GetFollowers(userid):
     print('Getting followers of',userid)
-    twit_api = GetTwitterRest(config.GetPathToKey())
+    twit_api = GetTwitterRest()
 
     filename = config.GetUserFileName(userid)
     user = config.ReadJSON(filename)
@@ -161,16 +189,12 @@ def FilterStatusByLocation(params):
     day_num = params['day']  
     set_name = params['set']
     call_num = params['call']
+    search_box =  params['boundaries']
     
     if call_num == 1:
-        
-        # Set geo constraints rect
-        county_geo = '-80.519,42,-79.762,42.27'
-        city_geo = '-80.2,42.05,-79.9,42.2'
-        search_box =  county_geo
 
         max_tweets=100
-        twit_stream = GetTwitterStream(config.GetPathToKey())
+        twit_stream = GetTwitterStream()
         try:
             stream = twit_stream.statuses.filter(locations=search_box)
             # Load tweets to list
@@ -211,7 +235,7 @@ def GetUpdatedStatuses(params):
     tweet_ids = config.GetTweetIds(filename)
     
     # Pass id get status  
-    twit_api = GetTwitterRest(config.GetPathToKey())
+    twit_api = GetTwitterRest()
     statuses = []
     for tweet_id in tweet_ids:
         try:
